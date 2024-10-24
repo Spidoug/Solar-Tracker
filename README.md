@@ -1,11 +1,12 @@
 # Solar-Tracker
 
-![Esquemático elétrico do seguidor solar](https://github.com/user-attachments/assets/ef8b32a0-9b27-4152-88a8-94a5eeafb1a0)
-
+![Solar tracker](https://github.com/user-attachments/assets/14e7e882-e4fa-4f13-8470-cbe85fea057b)
 
 This code implements a solar tracker system using an Arduino, which controls a servo motor to adjust the angle of a solar panel based on readings from two LDRs and an irradiance sensor. Additionally, there is a compass module (HMC5883) to correct the system's orientation and an RTC module (real-time clock) to manage the operating time (from sunrise to sunset).
 
 The central logic includes active and passive operation modes, PID control to adjust the servo motor, and auto-calibration functionality to identify the best solar exposure angle. The EEPROM is used to store important settings such as schedules, magnetic declination, sudden variation filter state, and the operating mode.
+
+![Circuit](https://github.com/user-attachments/assets/d62eb5dc-f63b-43ab-a22d-1e1633ed56ea)
 
 Here are some highlights of the functionality:
 
@@ -27,6 +28,9 @@ EEPROM:
 Used to store and retrieve crucial information like schedules, filter state, and magnetic declination, ensuring the system retains its settings after restarts.
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+![App](https://github.com/user-attachments/assets/cdbe6c58-a20d-438f-949f-b8ca73dcf23d)
+
 
 The HTML code implements a control interface for the solar tracking system, allowing interaction with an Arduino through the Web Serial API (used to connect the browser to the device). Here are some important details:
 
