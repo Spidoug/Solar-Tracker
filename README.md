@@ -1,4 +1,7 @@
-# Solar-Tracker 1.00
+# Solar-Tracker
+
+![Uploading image.png…]()
+
 
 This code implements a solar tracker system using an Arduino, which controls a servo motor to adjust the angle of a solar panel based on readings from two LDRs and an irradiance sensor. Additionally, there is a compass module (HMC5883) to correct the system's orientation and an RTC module (real-time clock) to manage the operating time (from sunrise to sunset).
 
