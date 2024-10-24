@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #e0e0e0;
+            padding: 20px;
+        }
+        #container {
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #333;
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+        .module {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        button, input {
+            padding: 10px;
+            margin: 10px;
+            width: 100%;
+            max-width: 250px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        input[type="time"], input[type="number"], input[type="text"] {
+            max-width: 300px;
+        }
+        #status, #alerts {
+            font-size: 16px;
+            color: #333;
+            margin-top: 10px;
+            padding: 10px;
+            text-align: center;
+            background-color: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #alerts {
+            color: #d9534f;
+            font-weight: bold;
+        }
+        #compassDisplay {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007BFF;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        canvas {
+            width: 100%;
+            height: 300px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Solar Tracker</h1>
+
+        <!-- Serial Connection -->
+        <div class="module">
+            <h2>Serial Connection</h2>
+            <div id="status">Status: Not connected</div>
+            <button id="connectButton">Connect to Arduino</button>
+            <button id="disconnectButton" disabled>Disconnect</button>
+        </div>
+
+        <!-- Angle Settings -->
+        <div class="module">
+            <h2>Angle Adjustment</h2>
+            <input type="number" id="angleInput" min="30" max="150" placeholder="Angle (30° to 150°)">
+            <button id="setAngleButton" disabled>Set Angle</button>
+            <button id="autoModeButton" disabled>Enable Auto Mode</button>
+        </div>
+
+        <!-- Time and Date Sync -->
+        <div class="module">
+            <h2>Time and Date Sync</h2>
+            <button id="syncTimeButton" disabled>Sync Time and Date</button>
+        </div>
+
+        <!-- Sunrise/Sunset Times -->
+        <div class="module">
+            <h2>Sunrise/Sunset Settings</h2>
+            <input type="time" id="sunriseTime">
+            <input type="time" id="sunsetTime">
+            <button id="sendSunriseSunsetButton" disabled>Set Sunrise/Sunset</button>
+        </div>
+
+        <!-- Magnetic Declination -->
+        <div class="module">
+            <h2>Magnetic Declination</h2>
+            <input type="text" id="declinationInput" placeholder="Declination (in degrees)">
+            <button id="sendDeclinationButton" disabled>Set Magnetic Declination</button>
+        </div>
+
+        <!-- Tracking Filter -->
+        <div class="module">
+            <h2>Tracking Mode</h2>
+            <button id="antiDisturbanceButton" disabled>Activate Anti-Disturbance Filter</button>
+            <button id="toggleModeButton" disabled>Toggle between Active/Passive Mode</button>
+        </div>
+
+        <!-- Data Recording -->
+        <div class="module">
+            <h2>Data Recording</h2>
+            <button id="startRecordingButton" disabled>Start Recording</button>
+            <button id="stopRecordingButton" disabled>Stop Recording and Save CSV</button>
+        </div>
+
+        <!-- Compass Display -->
+        <div class="module">
+            <h2>Compass</h2>
+            <div id="compassDisplay">Compass: 0°</div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="module">
+            <h2>Alerts</h2>
+            <div id="alerts">No alerts received.</div>
+        </div>
+
+        <!-- Irradiance Chart -->
+        <div class="module">
+            <h2>Solar Panel</h2>
+            <canvas id="calibrationChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Adding Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        let port;
+        let reader;
+        let inputDone;
+        let outputDone;
+        let inputStream;
+        let outputStream;
+
+        let isRecording = false;
+        let recordedData = [];
+
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const setAngleButton = document.getElementById('setAngleButton');
+        const autoModeButton = document.getElementById('autoModeButton');
+        const syncTimeButton = document.getElementById('syncTimeButton');
+        const sendSunriseSunsetButton = document.getElementById('sendSunriseSunsetButton');
+        const sendDeclinationButton = document.getElementById('sendDeclinationButton');
+        const antiDisturbanceButton = document.getElementById('antiDisturbanceButton');
+        const toggleModeButton = document.getElementById('toggleModeButton');
+        const startRecordingButton = document.getElementById('startRecordingButton');
+        const stopRecordingButton = document.getElementById('stopRecordingButton');
+        const status = document.getElementById('status');
+        const alerts = document.getElementById('alerts');
+        const compassDisplay = document.getElementById('compassDisplay');
+        const angleInput = document.getElementById('angleInput');
+        const sunriseTime = document.getElementById('sunriseTime');
+        const sunsetTime = document.getElementById('sunsetTime');
+        const declinationInput = document.getElementById('declinationInput');
+        const calibrationChart = document.getElementById('calibrationChart').getContext('2d');
+
+        let angleData = [];
+        let irradianceData = [];
+
+        // Bar chart setup with title and axes
+        const chart = new Chart(calibrationChart, {
+            type: 'bar',
+            data: {
+                labels: angleData, // Angles
+                datasets: [{
+                    label: 'Irradiance (W/m²)',
+                    data: irradianceData, // Corresponding irradiance
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Irradiance (W/m²) x Angle (°)'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Angle (°)'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Irradiance (W/m²)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Function to connect to Arduino
+        connectButton.addEventListener('click', async () => {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+
+                status.textContent = 'Status: Connected';
+                connectButton.disabled = true;
+                disconnectButton.disabled = false;
+                setAngleButton.disabled = false;
+                autoModeButton.disabled = false;
+                syncTimeButton.disabled = false;
+                sendSunriseSunsetButton.disabled = false;
+                sendDeclinationButton.disabled = false;
+                antiDisturbanceButton.disabled = false;
+                toggleModeButton.disabled = false;
+                startRecordingButton.disabled = false;
+
+                const encoder = new TextEncoderStream();
+                outputDone = encoder.readable.pipeTo(port.writable);
+                outputStream = encoder.writable;
+
+                const decoder = new TextDecoderStream();
+                inputDone = port.readable.pipeTo(decoder.writable);
+                inputStream = decoder.readable;
+                reader = inputStream.getReader();
+
+                readLoop();
+            } catch (error) {
+                console.error('Error connecting:', error);
+                status.textContent = 'Status: Error connecting';
+            }
+        });
+
+        // Function to disconnect from Arduino
+        disconnectButton.addEventListener('click', async () => {
+            if (reader) {
+                reader.cancel();
+                await inputDone.catch(() => {});
+                reader = null;
+                inputDone = null;
+            }
+            if (outputStream) {
+                outputStream.getWriter().close();
+                await outputDone;
+                outputStream = null;
+            }
+            await port.close();
+            port = null;
+
+            // Clear the chart data
+            angleData = [];
+            irradianceData = [];
+            chart.update(); // Update chart
+
+            status.textContent = 'Status: Disconnected';
+            connectButton.disabled = false;
+            disconnectButton.disabled = true;
+            setAngleButton.disabled = true;
+            autoModeButton.disabled = true;
+            syncTimeButton.disabled = true;
+            sendSunriseSunsetButton.disabled = true;
+            sendDeclinationButton.disabled = true;
+            antiDisturbanceButton.disabled = true;
+            toggleModeButton.disabled = true;
+            startRecordingButton.disabled = true;
+            stopRecordingButton.disabled = true;
+        });
+
+        // Function to send the set angle to Arduino
+        setAngleButton.addEventListener('click', async () => {
+            const angle = angleInput.value;
+            if (angle && angle >= 30 && angle <= 150) {
+                const command = `7\n${angle}\n`; // Command based on Arduino menu
+                await sendToArduino(command);
+            }
+        });
+
+        // Function to activate auto mode by sending an out-of-range angle
+        autoModeButton.addEventListener('click', async () => {
+            const command = '7\n999\n'; // Angle "999" out of range to activate auto mode
+            await sendToArduino(command);
+        });
+
+        // Function to sync computer time with Arduino
+        syncTimeButton.addEventListener('click', async () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1; // Month as 1-12
+            const day = now.getDate();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const second = now.getSeconds();
+
+            const command = `1\n${year} ${month} ${day} ${hour} ${minute} ${second}\n`;
+            await sendToArduino(command);
+        });
+
+        // Function to send sunrise and sunset times to Arduino
+        sendSunriseSunsetButton.addEventListener('click', async () => {
+            const sunrise = sunriseTime.value;
+            const sunset = sunsetTime.value;
+            if (sunrise && sunset) {
+                const commandSunrise = `2\n${sunrise.replace(':', ' ')}\n`; // Command to set sunrise
+                const commandSunset = `3\n${sunset.replace(':', ' ')}\n`; // Command to set sunset
+                await sendToArduino(commandSunrise);
+                await sendToArduino(commandSunset);
+            }
+        });
+
+        // Function to send magnetic declination to Arduino
+        sendDeclinationButton.addEventListener('click', async () => {
+            const declination = declinationInput.value;
+            if (declination && !isNaN(declination)) {
+                const command = `5\n${declination}\n`; // Command based on Arduino menu
+                await sendToArduino(command);
+            }
+        });
+
+        // Function to activate the anti-disturbance mode
+        antiDisturbanceButton.addEventListener('click', async () => {
+            await sendToArduino('4\n'); // Command based on Arduino menu
+        });
+
+        // Function to toggle between active and passive modes
+        toggleModeButton.addEventListener('click', async () => {
+            await sendToArduino('6\n'); // Command based on Arduino menu
+        });
+
+        // Function to start data recording
+        startRecordingButton.addEventListener('click', () => {
+            isRecording = true;
+            recordedData = [];
+            stopRecordingButton.disabled = false;
+        });
+
+        // Function to stop data recording and export as CSV
+        stopRecordingButton.addEventListener('click', () => {
+            isRecording = false;
+            exportToCSV(recordedData);
+            stopRecordingButton.disabled = true;
+        });
+
+        // Function to read data from Arduino
+        async function readLoop() {
+            let dataBuffer = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    break;
+                }
+                if (value) {
+                    dataBuffer += value;
+                    // Process only when a complete line is received (ended by '\n')
+                    if (dataBuffer.includes('\n')) {
+                        processReceivedData(dataBuffer.trim());
+                        dataBuffer = ''; // Clear the buffer after processing
+                    }
+                }
+            }
+        }
+
+        // Function to process data received from Arduino
+        function processReceivedData(data) {
+            // Display all received data in the alerts field
+            alerts.textContent = `Data received: ${data}`;
+
+            // Detect autocalibration data in the format "Angle: <value> - Irradiance: <value> - Compass: <value>"
+            const angleMatch = data.match(/Angle:\s*(\d+)/);
+            const irradianceMatch = data.match(/Irradiance:\s*([\d.]+)/);
+            const compassMatch = data.match(/Orientation:\s*([\d.]+)/);
+
+            if (angleMatch && irradianceMatch && compassMatch) {
+                const angleValue = angleMatch[1];
+                const irradianceValue = irradianceMatch[1];
+                const compassValue = compassMatch[1];
+                const now = new Date();
+
+                // Update the compass value in real time
+                compassDisplay.textContent = `Compass: ${compassValue}°`;
+
+                // Add values to the chart
+                angleData.push(angleValue);
+                irradianceData.push(irradianceValue);
+                chart.update(); // Update chart
+
+                // Record data if recording
+                if (isRecording) {
+                    recordedData.push({
+                        timestamp: now.toISOString(),
+                        angle: angleValue,
+                        irradiance: irradianceValue,
+                        compass: compassValue
+                    });
+                }
+            }
+        }
+
+        // Function to send commands to Arduino
+        async function sendToArduino(command) {
+            const writer = outputStream.getWriter();
+            await writer.write(command);
+            writer.releaseLock();
+        }
+
+        // Function to export data as CSV (using ";" as separator)
+        function exportToCSV(data) {
+            let csvContent = "data:text/csv;charset=utf-8,Date/Time;Angle (°);Irradiance (W/m²);Compass (°)\n";
+            data.forEach(row => {
+                csvContent += `${row.timestamp};${row.angle};${row.irradiance};${row.compass}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Solar_Tracker.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
