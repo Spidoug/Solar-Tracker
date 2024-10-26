@@ -339,13 +339,13 @@ float getCompassOrientation() {
   float heading = atan2(magY, magX) * 180 / PI;
 
   // Adjust for negative values and correct magnetic declination
-  if (heading < 0) {
-    heading += 360;
-  }
-
-  heading += magneticDeclination + compVl;
+  heading += magneticDeclination;
   if (heading >= 360) {
     heading -= 360;
+  }
+  
+  if (heading < 0) {
+    heading += 360;
   }
 
   return heading;
@@ -421,7 +421,7 @@ void adjustMagneticDeclination() {
   declinationInput.trim();
   float declination = declinationInput.toFloat();
   if (declination != 0 || declinationInput == "0") {
-    magneticDeclination = declination;
+    magneticDeclination = declination + compVl;
     saveMagneticDeclinationEEPROM();
     Serial.println(F("Magnetic declination set!"));
     Serial.println(F(""));
