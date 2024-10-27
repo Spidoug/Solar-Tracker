@@ -8,29 +8,49 @@ The central logic includes active and passive operation modes, PID control to ad
 
 ![Circuit](https://github.com/user-attachments/assets/d62eb5dc-f63b-43ab-a22d-1e1633ed56ea)
 
-Here are some highlights of the functionality:
+1. Project Objective
+The solar tracking system is designed to maximize solar energy capture by orienting a photovoltaic panel at the optimal angle throughout the day. Utilizing LDR sensors, a compass module, a servo motor, an RTC (Real-Time Clock), and EEPROM for parameter storage, the system ensures precise alignment to the sun and adapts to lighting conditions, providing precise and automated control with a calibration mechanism and manual adjustments.
 
-Operation Modes:
-Active Mode: Uses the LDRs to identify the best position based on the difference in luminosity between east and west. A PID controller adjusts the servo motor angle to align the solar panel.
+2. General Structure and Operation
+The system is structured with a set of functions and variables to manage and monitor the components of the solar tracker. Below are the main modules and operational flows of the code:
 
-Passive Mode: Gradually moves the panel throughout the day based on the time elapsed between sunrise and sunset.
+Initialization: Loads configuration data from the EEPROM, sets up the RTC and compass module, and starts the servo motor in a neutral position.
+Servo Motor Control: Based on readings from LDR sensors (located to the east and west), the system calculates the error between readings to adjust the panel angle towards the most intense light source.
+Calibration and Auto-Adjustment: An auto-calibration function seeks the angle of maximum irradiance, while the compass orientation ensures north-south alignment of the panel.
+Operating Modes: Includes active and passive solar tracking modes, as well as a manual mode for independent angle setting.
+Storage and Retrieval: The EEPROM saves magnetic declination settings, operation times, and filter status to ensure configuration persistence.
 
-Solar Auto-Calibration:
-A servo angle sweep process to identify the point of maximum irradiance, dynamically adjusting the sweep time according to the irradiance variation.
+3. Key Components and Functions
 
-Orientation Correction with Compass:
-The compass module reading is corrected using the minimum and maximum values calibrated during initialization, along with the magnetic declination stored in the EEPROM.
+RTC (Real-Time Clock): Used to determine sunrise and sunset times, activating the system only during solar incidence periods.
+Compass (HMC5883L): Provides magnetic orientation, allowing the panel to precisely align on the north-south axis.
+Servo Motor: Responsible for adjusting the solar panel to the optimal light angle, with limits set to avoid overload.
+EEPROM: Enables the persistence of configurable parameters, such as magnetic declination, filter status, and operation times.
+LDR Sensors: Aid in detecting the direction with the highest solar incidence, orienting the panel based on the light difference between sensors.
 
-Sound Notifications:
-The system uses a buzzer to indicate events such as startup, errors, or successful calibrations and adjustments.
+4. Positive Points and Relevant Aspects
 
-EEPROM:
-Used to store and retrieve crucial information like schedules, filter state, and magnetic declination, ensuring the system retains its settings after restarts.
+Dynamic Calibration: The auto-calibration function adjusts the angle automatically based on irradiance, keeping the panel in the ideal position.
+Time and EEPROM Configurations: By saving data in the EEPROM, the system preserves settings even after being powered off, eliminating the need for manual reconfiguration.
+Error Detection and Sound Alerts: The system includes sound alerts for different situations, such as misalignment and orientation errors, improving interactivity and monitoring.
+Flexible Operating Modes: The ability to operate in active, passive, and manual modes adds flexibility and allows adaptation to different usage scenarios.
 
+5. Applications and Potential Expansions
+This project can be used in various solar energy applications requiring cost-effective and high-efficiency solar tracking. Some of the main applications include:
+
+Small photovoltaic installations for energy capture in homes or farms.
+Self-sustaining energy systems, such as charging stations for electronic devices in remote areas.
+Solar efficiency studies in universities and research centers to optimize solar energy use.
+Potential Expansions:
+
+Integration with meteorological sensors for adjustment in cloudy conditions.
+Implementation of a stepper motor with lead screws, replacing the servo for more efficient movement in larger panels.
+
+6. Conclusion
+The code demonstrates a robust implementation of a solar tracking system, offering flexible configurations, persistent storage, and good precision control. With some improvements, particularly in movement logic and module communication, the system could achieve even more efficient and reliable performance, ensuring optimal panel alignment and maximizing solar energy capture.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ![App](https://github.com/user-attachments/assets/cdbe6c58-a20d-438f-949f-b8ca73dcf23d)
-
 
 The HTML code implements a control interface for the solar tracking system, allowing interaction with an Arduino through the Web Serial API (used to connect the browser to the device). Here are some important details:
 
