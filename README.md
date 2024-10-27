@@ -9,9 +9,11 @@ The central logic includes active and passive operation modes, PID control to ad
 ![Circuit](https://github.com/user-attachments/assets/d62eb5dc-f63b-43ab-a22d-1e1633ed56ea)
 
 1. Project Objective
+
 The solar tracking system is designed to maximize solar energy capture by orienting a photovoltaic panel at the optimal angle throughout the day. Utilizing LDR sensors, a compass module, a servo motor, an RTC (Real-Time Clock), and EEPROM for parameter storage, the system ensures precise alignment to the sun and adapts to lighting conditions, providing precise and automated control with a calibration mechanism and manual adjustments.
 
 2. General Structure and Operation
+
 The system is structured with a set of functions and variables to manage and monitor the components of the solar tracker. Below are the main modules and operational flows of the code:
 
 Initialization: Loads configuration data from the EEPROM, sets up the RTC and compass module, and starts the servo motor in a neutral position.
@@ -36,6 +38,7 @@ Error Detection and Sound Alerts: The system includes sound alerts for different
 Flexible Operating Modes: The ability to operate in active, passive, and manual modes adds flexibility and allows adaptation to different usage scenarios.
 
 5. Applications and Potential Expansions
+
 This project can be used in various solar energy applications requiring cost-effective and high-efficiency solar tracking. Some of the main applications include:
 
 Small photovoltaic installations for energy capture in homes or farms.
@@ -47,6 +50,7 @@ Integration with meteorological sensors for adjustment in cloudy conditions.
 Implementation of a stepper motor with lead screws, replacing the servo for more efficient movement in larger panels.
 
 6. Conclusion
+
 The code demonstrates a robust implementation of a solar tracking system, offering flexible configurations, persistent storage, and good precision control. With some improvements, particularly in movement logic and module communication, the system could achieve even more efficient and reliable performance, ensuring optimal panel alignment and maximizing solar energy capture.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
