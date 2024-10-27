@@ -6,7 +6,8 @@ This code implements a solar tracker system using an Arduino, which controls a s
 
 The central logic includes active and passive operation modes, PID control to adjust the servo motor, and auto-calibration functionality to identify the best solar exposure angle. The EEPROM is used to store important settings such as schedules, magnetic declination, sudden variation filter state, and the operating mode.
 
-![Circuit](https://github.com/user-attachments/assets/d62eb5dc-f63b-43ab-a22d-1e1633ed56ea)
+![379955969-d62eb5dc-f63b-43ab-a22d-1e1633ed56ea](https://github.com/user-attachments/assets/edfbf34b-a3e9-4785-956b-9b2b0b20177f)
+
 
 1. Project Objective
 
