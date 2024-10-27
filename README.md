@@ -1,4 +1,4 @@
-# Solar-Tracker
+Solar Tracker
 
 ![Solar tracker](https://github.com/user-attachments/assets/14e7e882-e4fa-4f13-8470-cbe85fea057b)
 
