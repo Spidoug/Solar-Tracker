@@ -9,6 +9,7 @@ The central logic includes active and passive operation modes, PID control to ad
 ![379955969-d62eb5dc-f63b-43ab-a22d-1e1633ed56ea](https://github.com/user-attachments/assets/edfbf34b-a3e9-4785-956b-9b2b0b20177f)
 
 
+
 1. Project Objective
 
 The solar tracking system is designed to maximize solar energy capture by orienting a photovoltaic panel at the optimal angle throughout the day. Utilizing LDR sensors, a compass module, a servo motor, an RTC (Real-Time Clock), and EEPROM for parameter storage, the system ensures precise alignment to the sun and adapts to lighting conditions, providing precise and automated control with a calibration mechanism and manual adjustments.
